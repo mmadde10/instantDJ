@@ -1,12 +1,10 @@
 <a href="http://fvcproductions.com"><img src="https://avatars1.githubusercontent.com/u/4284691?v=3&s=200" title="FVCproductions" alt="FVCproductions"></a>
 
-<!-- [![FVCproductions](https://avatars1.githubusercontent.com/u/4284691?v=3&s=200)](http://fvcproductions.com) -->
-
 ***INSERT GRAPHIC HERE (include hyperlink in image)***
 
 # Instant DJ
 
-> Have your party guests request songs 
+> Have your party guests request songs themselves instead of crowding your computer
 
 **Badges will go here**
 
@@ -32,14 +30,12 @@
 
 ### Setup
 
-- If you want more syntax highlighting, format your code like this:
 
-> update and install this package first
+#### Server
 
-```shell
-$ brew update
-$ brew install fvcproductions
-```
+* Install Go [Here](https://golang.org/dl/) 
+* The server makes use of the spotify API for auth and getting tracks. So you must make a developer account and create a new application
+
 
 > now install npm and bower packages
 
@@ -66,6 +62,3 @@ Reach out to me at one of the following places!
 ## License
 
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
-
-- **[MIT license](http://opensource.org/licenses/mit-license.php)**
-- Copyright 2015 © <a href="http://fvcproductions.com" target="_blank">FVCproductions</a>.

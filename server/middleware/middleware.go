@@ -125,6 +125,7 @@ func GetTrack(w http.ResponseWriter, r *http.Request) {
 	//TODO: FIX THIS
 	tok := r.Header["Authorization"][0]
 
+	//TODO: FIX THIS STUFF
 	client := auth.NewClient(tok)
 
 	// track := client.GetTrack(mux.Vars(r)["id"])
