@@ -1,5 +1,6 @@
 package model
 
+// Track track object
 type Track struct {
 	id          string
 	Name        string
