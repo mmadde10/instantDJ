@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/mux"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
 )
@@ -122,14 +123,42 @@ func CompleteAuth(w http.ResponseWriter, r *http.Request) {
 
 //GetTrack Checks for token, then gets track by ID
 func GetTrack(w http.ResponseWriter, r *http.Request) {
-	//TODO: FIX THIS
+	client := &http.Client{}
 	tok := r.Header["Authorization"][0]
 
-	//TODO: FIX THIS STUFF
-	client := auth.NewClient(tok)
+	params := mux.Vars(r)
+	id := params["id"]
 
-	// track := client.GetTrack(mux.Vars(r)["id"])
-	fmt.Println("tr: ", client)
+	url := "https://api.spotify.com/v1/tracks/" + id
 
-	json.NewEncoder(w).Encode("test")
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("Authorization", tok)
+	resp, err := client.Do(req)
+
+	if resp.StatusCode == 200 {
+
+		defer resp.Body.Close()
+		var result map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&result)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println("hee: ", result["name"])
+
+		// TrackResult := Track{
+		// 	id: result["id"],
+		// }
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(result)
+	}
+	if resp.StatusCode == 401 {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401 - Unauthorized"))
+	}
+	if resp.StatusCode == 400 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400 - Bad Request"))
+	}
 }
