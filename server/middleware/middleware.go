@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -38,6 +39,44 @@ type userLogin struct {
 	AccessToken  string
 	RefreshToken string
 	Email        string
+}
+
+type Artist struct {
+	ExternalUrls interface{} `json: -`
+	Href         string      `json: "href"`
+	ID           string      `json: "id"`
+	Name         string      `json: "name"`
+	Type         string      `json: -`
+	URI          string      `json: "uri"`
+}
+
+type Image struct {
+	Height int    `json: "height"`
+	Url    string `json: "url"`
+	Width  int    `json: "width"`
+}
+
+type Album struct {
+	AlbumType            string      `json: "album_type"`
+	Artists              interface{} `json: -`
+	ExternalUrls         interface{} `json: -`
+	Href                 string      `json: "href"`
+	ID                   string      `json: "id"`
+	Name                 string      `json: "name"`
+	Images               []Image     `json: -`
+	releaseDate          string      `json: -`
+	releaseDatePrecision string      `json: -`
+	totalTracks          int         `json: -`
+	Type                 string      `json: -`
+	URI                  string      `json: "uri"`
+}
+
+type track struct {
+	Album   Album    `json: "album"`
+	ID      string   `json: "id"`
+	Name    string   `json: "name"`
+	Artists []Artist `json: "artists"`
+	Href    string   `json: "href"`
 }
 
 // GenerateRandomBytes returns securely generated random bytes.
@@ -133,25 +172,25 @@ func GetTrack(w http.ResponseWriter, r *http.Request) {
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", tok)
-	resp, err := client.Do(req)
+	resp, _ := client.Do(req)
 
 	if resp.StatusCode == 200 {
 
 		defer resp.Body.Close()
-		var result map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&result)
+
+		body, _ := ioutil.ReadAll(resp.Body)
+
+		var TrackResult track
+		err := json.Unmarshal(body, &TrackResult)
+
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Println("hee: ", result["name"])
-
-		// TrackResult := Track{
-		// 	id: result["id"],
-		// }
+		fmt.Println("ddd: ", TrackResult.Album)
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(result)
+		json.NewEncoder(w).Encode(TrackResult)
 	}
 	if resp.StatusCode == 401 {
 		w.WriteHeader(http.StatusUnauthorized)
