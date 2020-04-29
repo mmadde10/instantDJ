@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go-instant-dj/instantDJ/server/router"
+	"github.com/mmadde10/instantDJ/server/router"
 	"log"
 	"net/http"
 )

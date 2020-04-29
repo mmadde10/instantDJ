@@ -1,4 +1,4 @@
-package middleware
+package main
 
 import (
 	"crypto/rand"
@@ -8,16 +8,18 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/gorilla/mux"
+	. "github.com/mmadde10/instantDJ/server/model"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
 )
 
 // // DB connection string
-// // const connectionString = "mongodb://localhost:27017"
-// const connectionString = "Connection String"
+//const connectionString = "mongodb://localhost:27017"
+//const connectionString = "Connection String"
 
 // // Database Name
 // const dbName = "test"
@@ -32,52 +34,6 @@ const redirectURI = "http://localhost:8080/api/callback"
 
 var clientID = os.Getenv("clientID")
 var secretKey = os.Getenv("secretKey")
-
-type userLogin struct {
-	ID           string
-	Name         string
-	AccessToken  string
-	RefreshToken string
-	Email        string
-}
-
-type Artist struct {
-	ExternalUrls interface{} `json: -`
-	Href         string      `json: "href"`
-	ID           string      `json: "id"`
-	Name         string      `json: "name"`
-	Type         string      `json: -`
-	URI          string      `json: "uri"`
-}
-
-type Image struct {
-	Height int    `json: "height"`
-	Url    string `json: "url"`
-	Width  int    `json: "width"`
-}
-
-type Album struct {
-	AlbumType            string      `json: "album_type"`
-	Artists              interface{} `json: -`
-	ExternalUrls         interface{} `json: -`
-	Href                 string      `json: "href"`
-	ID                   string      `json: "id"`
-	Name                 string      `json: "name"`
-	Images               []Image     `json: -`
-	releaseDate          string      `json: -`
-	releaseDatePrecision string      `json: -`
-	totalTracks          int         `json: -`
-	Type                 string      `json: -`
-	URI                  string      `json: "uri"`
-}
-
-type track struct {
-	Album   Album    `json: "album"`
-	ID      string   `json: "id"`
-	Name    string   `json: "name"`
-	Artists []Artist `json: "artists"`
-	Href    string   `json: "href"`
-}
 
 // GenerateRandomBytes returns securely generated random bytes.
 // It will return an error if the system's secure random
@@ -127,7 +83,7 @@ func AuthenticateUser(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	AuthInfo := userLogin{
+	AuthInfo := UserLogin{
 		ID:           user.ID,
 		Name:         user.DisplayName,
 		AccessToken:  tok.AccessToken,
@@ -180,14 +136,12 @@ func GetTrack(w http.ResponseWriter, r *http.Request) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var TrackResult track
+		var TrackResult Track
 		err := json.Unmarshal(body, &TrackResult)
 
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Println("ddd: ", TrackResult.Album)
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(TrackResult)
@@ -200,4 +154,49 @@ func GetTrack(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400 - Bad Request"))
 	}
+}
+
+// GetSearchResults - Takes in a query,
+func GetSearchResults(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	query := params["query"]
+
+	encodedQuery := url.QueryEscape(query)
+
+	baseURL, err := url.Parse("https://api.spotify.com/v1/search")
+	if err != nil {
+		fmt.Println("Malformed URL: ", err.Error())
+		return
+	}
+
+	client := &http.Client{}
+	tok := r.Header["Authorization"][0]
+
+	newParams := url.Values{}
+	newParams.Add("q", encodedQuery)
+	newParams.Add("type", "track,artist")
+	newParams.Add("market", "US")
+	newParams.Add("limit", "10")
+	newParams.Add("offset", "5")
+
+	baseURL.RawQuery = newParams.Encode()
+
+	req, _ := http.NewRequest("GET", baseURL.String(), nil)
+	req.Header.Add("Authorization", tok)
+	resp, _ := client.Do(req)
+
+	defer resp.Body.Close()
+
+	var SearchResult map[string]string
+	body, _ := ioutil.ReadAll(resp.Body)
+	error := json.Unmarshal(body, &SearchResult)
+
+	if error != nil {
+		log.Fatal(error)
+	}
+
+	fmt.Println("eee: ", SearchResult)
+
+	json.NewEncoder(w).Encode("TrackResult")
 }
